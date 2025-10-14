@@ -45,10 +45,10 @@ export interface CategoryResponse {
 }
 
 export interface PaginationCommon<T> {
-    count: number;
-    currentPage: number;
-    data: T[]
-    totalPage: number;
+    count?: number;
+    currentPage?: number;
+    data?: T[]
+    totalPage?: number;
 }
 
 export const TRANSACTION_URL = 'transaction'
@@ -77,14 +77,14 @@ export const useAddTransaction = () => {
     });
 };
 
-export const useGetTransactionHistory = (dto: QueryTransactionDto) => {
-    return useQuery<PaginationCommon<TransactionHistoryResponse>, Error, QueryTransactionDto>({
-        queryKey: [QUERY_KEY.GET_TRANSACTION_HISTORY],
+export const useGetTransactionHistory = (dto: QueryTransactionDto) =>
+    useQuery<PaginationCommon<TransactionHistoryResponse>, Error>({
+        queryKey: [QUERY_KEY.GET_TRANSACTION_HISTORY, dto],
         queryFn: () =>
             api<PaginationCommon<TransactionHistoryResponse>>(`${TRANSACTION_URL}/histories`, {
                 method: 'GET',
                 params: {startDate: dto.searchKey},
             }),
+        enabled: !!dto.searchKey,
         retry: false,
     });
-};
