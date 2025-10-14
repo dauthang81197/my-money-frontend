@@ -14,6 +14,7 @@ export interface TransactionPayload {
     note?: string;
     merchantId?: string;
     currencyCode?: string;
+    id?: string;
 }
 
 export interface TransactionResponse {
@@ -51,6 +52,46 @@ export interface PaginationCommon<T> {
     totalPage?: number;
 }
 
+export interface DetailTransaction {
+    id: string;
+    createdAt: string;
+    updatedAt: string;
+    userId: string;
+    accountId: string;
+    counterAccountId: string;
+    type: string;
+    amount: number;
+    currencyCode: string;
+    transactionTime: string;
+    transactionDate: string;
+    note: string;
+    merchantId: string;
+    splits: Split[]
+}
+
+export interface Split {
+    id: string;
+    createdAt: string;
+    updatedAt: string;
+    txnId: string;
+    categoryId: string;
+    amount: number;
+    category: Category
+}
+
+export interface Category {
+    id: string;
+    createdAt: string;
+    updatedAt: string;
+    userId: string;
+    name: string;
+    kind: string;
+    parentId: string;
+    icon: string;
+    isArchived: boolean;
+}
+
+
 export const TRANSACTION_URL = 'transaction'
 export const useGetTransaction = (dto: TransactionDto) => {
     return useQuery({
@@ -67,7 +108,7 @@ export const useGetTransaction = (dto: TransactionDto) => {
 
 export const useAddTransaction = () => {
     return useMutation<TransactionResponse, Error, TransactionPayload>({
-        mutationKey: [QUERY_KEY.POST_LOGIN],
+        mutationKey: [QUERY_KEY.POST_TRANSACTION],
         mutationFn: async (body) => {
             return api<TransactionResponse>(`${TRANSACTION_URL}/expense`, {
                 method: 'POST',
@@ -77,14 +118,52 @@ export const useAddTransaction = () => {
     });
 };
 
-export const useGetTransactionHistory = (dto: QueryTransactionDto) =>
-    useQuery<PaginationCommon<TransactionHistoryResponse>, Error>({
+export const useEditTransaction = () => {
+    return useMutation<TransactionResponse, Error, TransactionPayload>({
+        mutationKey: [QUERY_KEY.PUT_TRANSACTION],
+        mutationFn: async (body) => {
+            return api<TransactionResponse>(`${TRANSACTION_URL}/${body?.id}/expense`, {
+                method: 'PUT',
+                body: JSON.stringify(body),
+            });
+        },
+    });
+};
+
+export const useGetDetailTransaction = (id?: string) => {
+    return useQuery({
+        queryKey: [QUERY_KEY.GET_TRANSACTION, id],
+        queryFn: async () =>
+            api<DetailTransaction>(`${TRANSACTION_URL}/${id}/expense`, {
+                method: 'GET',
+            }),
+        enabled: !!id, // chỉ gọi API khi có id
+        retry: false,
+    });
+};
+
+export const useDeleteTransaction = () => {
+    return useMutation<void, Error, string>({
+        mutationKey: [QUERY_KEY.DELETE_TRANSACTION],
+        mutationFn: async (id: string) => {
+            return api(`${TRANSACTION_URL}/${id}/expense`, {
+                method: 'DELETE',
+            });
+        },
+    });
+};
+
+
+export const useGetTransactionHistory = (dto: QueryTransactionDto) => {
+    return useQuery({
         queryKey: [QUERY_KEY.GET_TRANSACTION_HISTORY, dto],
         queryFn: () =>
             api<PaginationCommon<TransactionHistoryResponse>>(`${TRANSACTION_URL}/histories`, {
                 method: 'GET',
                 params: {startDate: dto.searchKey},
             }),
-        enabled: !!dto.searchKey,
         retry: false,
     });
+};
+
+
