@@ -28,15 +28,15 @@ export default function ExpenseCalendar({expenses = {}}: CalendarProps) {
         [expenses]
     );
 
-    return (
-        <div className="p-4 bg-neutral-800 rounded-xl shadow-md w-full">
-            <Calendar
-                tileContent={renderTile}
-                prevLabel="<"
-                nextLabel=">"
-                showNeighboringMonth={false}
-                className="rounded-lg border-0 bg-neutral-800 !w-full"
-            />
-        </div>
-    );
+  return (
+    <div className="p-4 bg-neutral-800 rounded-xl shadow-md w-full">
+      <Calendar
+        tileContent={renderTile}
+        prevLabel="<"
+        nextLabel=">"
+        showNeighboringMonth={false}
+        className="rounded-lg border-0 bg-neutral-800 !w-full"
+      />
+    </div>
+  );
 }
