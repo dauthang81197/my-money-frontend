@@ -26,7 +26,6 @@ export default function ExpenseCalendar({ expenses = {} }: CalendarProps) {
   return (
     <div className="p-4 bg-neutral-800 rounded-xl shadow-md w-full">
       <Calendar
-        locale="vi-VN"
         tileContent={renderTile}
         prevLabel="<"
         nextLabel=">"
