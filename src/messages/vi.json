@@ -1,0 +1,17 @@
+{
+  "total": "Tổng",
+  "target": "Mục tiêu",
+  "balance": "Số dư",
+  "today": "Hôm nay",
+  "home": "Trang chủ",
+  "menu": {
+    "home": "Trang chủ",
+    "manager": "Quản lý",
+    "report": "Báo cáo"
+  },
+  "login": {
+    "login": "Đăng nhập",
+    "email": "Email",
+    "password": "Mật khẩu"
+  }
+}
