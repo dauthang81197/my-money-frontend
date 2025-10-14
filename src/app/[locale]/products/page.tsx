@@ -134,6 +134,7 @@ export default function ProductsPage() {
                 className="bg-neutral-600 rounded-lg p-4 hover:bg-neutral-500 transition-colors"
               >
                 <div className="flex items-center justify-between mb-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={product.image}
                     alt={product.name}

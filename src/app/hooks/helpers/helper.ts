@@ -1,5 +1,5 @@
 const BASE =
-  process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:8080/api/v1/';
+  process.env.NEXT_PUBLIC_API_BASE ?? 'http://192.168.50.186:8000/api/v1/';
 
 interface ApiOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined | null>;

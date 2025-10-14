@@ -21,7 +21,7 @@ export default function LoginPage() {
           localStorage.setItem('user', JSON.stringify(data?.user));
           router.push('/vi/dashboard');
         },
-        onError(error: any) {
+        onError() {
           alert('Sai tài khoản hoặc mật khẩu!');
         },
       }
