@@ -3,14 +3,14 @@
 import {DashboardLayout} from '../components/layout';
 import MetricCard from '../components/MetricCard';
 import {useTranslations} from 'next-intl';
-import {useCallback, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 import Image from 'next/image';
 import ExpenseCalendar from '@/app/[locale]/components/ExpenseCalendar';
 import ModalBase from '@/app/[locale]/components/modal/ModalBase';
 import {
     TransactionHistoryResponse,
     TransactionResponse,
-    useAddTransaction,
+    useAddTransaction, useDeleteTransaction, useEditTransaction, useGetDetailTransaction,
     useGetTransaction,
     useGetTransactionHistory
 } from '@/app/hooks/queries/useTransaction';
@@ -25,11 +25,14 @@ import {Eye, Pencil, Trash2} from "lucide-react";
 export default function Dashboard() {
     const t = useTranslations();
     const {startDate: defaultStart, endDate: defaultEnd} = getCurrentMonthRange();
-
     const queryClient = useQueryClient();
+    const [transactionId, setTransactionId] = useState('')
     // API
     const {data: myCategories} = useGetMyCategory()
     const {mutate: addTransaction} = useAddTransaction();
+    const {mutate: editTransaction} = useEditTransaction();
+    const {mutate: deleteTransaction} = useDeleteTransaction();
+    const {data: detailTransaction} = useGetDetailTransaction(transactionId);
     const {data: transactionHistoriesData} = useGetTransactionHistory({})
     const [startDate] = useState(defaultStart);
     const [endDate] = useState(defaultEnd);
@@ -53,6 +56,25 @@ export default function Dashboard() {
         {title: t('today'), value: '2.3K', change: '11.3%', isPositive: true},
     ];
 
+    useEffect(() => {
+        if (open && transactionId) {
+            setNote(detailTransaction?.note || '')
+            setAmount(detailTransaction?.amount || 0)
+            setCategory(detailTransaction?.splits?.[0]?.categoryId || '')
+            setOccurredAt(detailTransaction?.transactionTime || '')
+        }
+    }, [detailTransaction?.amount, detailTransaction?.note, detailTransaction?.splits, detailTransaction?.transactionTime, open, transactionId]);
+
+    useEffect(() => {
+        if (!open) {
+            setTransactionId('')
+            setNote('')
+            setAmount(1000)
+            setCategory('')
+            setCategory(getDefaultOccurredAt())
+        }
+    }, [open]);
+
 
     const handleSubmit = useCallback(() => {
         addTransaction(
@@ -61,6 +83,23 @@ export default function Dashboard() {
                 onSuccess: (data: TransactionResponse) => {
                     console.log(data)
                     queryClient.invalidateQueries({queryKey: [QUERY_KEY.GET_TRANSACTION]});
+                    queryClient.invalidateQueries({queryKey: [QUERY_KEY.GET_TRANSACTION_HISTORY]});
+                    setOpen(false)
+                },
+                onError() {
+                    alert('Có lỗi xảy ra vui lòng thử lại!');
+                },
+            }
+        )
+    }, [addTransaction, amount, category, note, occurredAt, queryClient])
+
+    const handleUpdate = useCallback(() => {
+        editTransaction(
+            {categoryId: category, amount, occurredAt, note, id: transactionId},
+            {
+                onSuccess: () => {
+                    queryClient.invalidateQueries({queryKey: [QUERY_KEY.GET_TRANSACTION]});
+                    queryClient.invalidateQueries({queryKey: [QUERY_KEY.GET_TRANSACTION_HISTORY]});
                     setOpen(false)
                 },
                 onError() {
@@ -68,7 +107,7 @@ export default function Dashboard() {
                 },
             }
         );
-    }, [addTransaction, amount, category, note, occurredAt, queryClient])
+    }, [amount, category, editTransaction, note, occurredAt, queryClient, transactionId])
 
     const handleNavChange = (nav: string) => {
         console.log('Navigation changed to:', nav);
@@ -85,21 +124,28 @@ export default function Dashboard() {
         // Add create report logic here
     };
 
-    const handleView = (txn: TransactionHistoryResponse) => {
-        console.log("👁️ View:", txn);
-        // Mở modal xem chi tiết
-    };
-
-    const handleEdit = (txn: TransactionHistoryResponse) => {
-        console.log("✏️ Edit:", txn);
-    };
-
-    const handleDelete = (id: string) => {
-        if (confirm("Bạn có chắc chắn muốn xóa giao dịch này không?")) {
-            console.log("🗑️ Delete:", id);
-            // Gọi API xóa
+    const handleView = useCallback((id: string) => {
+        if (!open && id) {
+            setTransactionId(id)
+            setOpen(true)
         }
-    };
+
+    }, [open])
+
+
+    const handleDelete = useCallback((id: string) => {
+        if (confirm("Bạn có chắc chắn muốn xóa giao dịch này không?")) {
+            deleteTransaction(id, {
+                onSuccess: () => {
+                    queryClient.invalidateQueries({queryKey: [QUERY_KEY.GET_TRANSACTION]});
+                    queryClient.invalidateQueries({queryKey: [QUERY_KEY.GET_TRANSACTION_HISTORY]});
+                },
+                onError: () => {
+                    alert('Có lỗi xảy ra vui lòng thử lại!');
+                },
+            });
+        }
+    }, [deleteTransaction, queryClient]);
 
 
     const getDataCalendar = useMemo(() => {
@@ -109,7 +155,7 @@ export default function Dashboard() {
 
         return (data as { date: string; totalAmount: string }[]).reduce(
             (acc, row) => {
-                const dateKey = new Date(row.date).toISOString().split('T')[0];
+                const dateKey = new Date(row.date).toLocaleDateString('en-CA');
                 acc[dateKey] = parseFloat(row.totalAmount);
                 return acc;
             },
@@ -152,14 +198,14 @@ export default function Dashboard() {
                 cell: ({row}) => (
                     <div className="flex gap-2">
                         <button
-                            onClick={() => handleView(row.original)}
+                            onClick={() => handleView(row.original?.id)}
                             className="text-blue-400 hover:text-blue-300"
                             title="Xem"
                         >
                             <Eye size={18}/>
                         </button>
                         <button
-                            onClick={() => handleEdit(row.original)}
+                            onClick={() => handleView(row.original?.id)}
                             className="text-yellow-400 hover:text-yellow-300"
                             title="Sửa"
                         >
@@ -176,7 +222,7 @@ export default function Dashboard() {
                 ),
             },
         ],
-        []
+        [handleDelete, handleView]
     );
 
 
@@ -261,7 +307,8 @@ export default function Dashboard() {
             <div>
                 <p>History</p>
                 {(transactionHistoriesData?.data?.length ?? 0) > 0 && (
-                    <MyTable data={transactionHistoriesData ? transactionHistoriesData.data! : []} columns={columns}/>
+                    <MyTable data={transactionHistoriesData ? transactionHistoriesData.data! : []} columns={columns}
+                             totalPages={transactionHistoriesData?.totalPage || 0}/>
                 )}
             </div>
             <ModalBase open={open} onClose={() => setOpen(false)}>
@@ -273,7 +320,12 @@ export default function Dashboard() {
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
-                        handleSubmit()
+                        if (transactionId && transactionId !== '') {
+                            handleSubmit();
+                        } else {
+                            handleUpdate();
+                        }
+
                     }}
                     className="flex flex-col gap-4"
                 >

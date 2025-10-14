@@ -29,6 +29,7 @@ async function api<T>(input: ApiInput, init?: ApiOptions): Promise<T> {
         ? localStorage.getItem('access_token')
         : null;
 
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const isFormData = init?.body instanceof FormData;
     const res = await fetch(url, {
         ...init,
@@ -36,6 +37,7 @@ async function api<T>(input: ApiInput, init?: ApiOptions): Promise<T> {
             ...(isFormData ? {} : {'Content-Type': 'application/json'}),
             ...(token ? {Authorization: `Bearer ${token}`} : {}),
             ...(init?.headers || {}),
+            "X-Timezone": timeZone,
         },
     });
     if (!res.ok) {
