@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.3",
+    "@tanstack/react-table": "^8.21.3",
     "lucide-react": "^0.545.0",
     "next": "15.5.5",
     "next-intl": "^4.3.12",
