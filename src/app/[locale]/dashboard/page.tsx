@@ -90,7 +90,7 @@ export default function Dashboard() {
         // Mở modal xem chi tiết
     };
 
-    const handleEdit = (txn: never) => {
+    const handleEdit = (txn: TransactionHistoryResponse) => {
         console.log("✏️ Edit:", txn);
     };
 
@@ -260,8 +260,9 @@ export default function Dashboard() {
 
             <div>
                 <p>History</p>
-                {transactionHistoriesData?.data?.length > 0 &&
-                    <MyTable data={transactionHistoriesData?.data} columns={columns}/>}
+                {(transactionHistoriesData?.data?.length ?? 0) > 0 && (
+                    <MyTable data={transactionHistoriesData ? transactionHistoriesData.data! : []} columns={columns}/>
+                )}
             </div>
             <ModalBase open={open} onClose={() => setOpen(false)}>
                 <h2 className="text-white text-lg font-semibold mb-4">

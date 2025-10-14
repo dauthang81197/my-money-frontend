@@ -2,18 +2,19 @@
 import {
     useReactTable,
     getCoreRowModel,
-    flexRender,
+    flexRender, ColumnDef,
 } from "@tanstack/react-table";
 
-interface MyTableProps {
-    data: never,
-    columns: never
+interface MyTableProps<TData> {
+    data: TData[];
+    columns: ColumnDef<TData, unknown>[];
 }
 
-export default function MyTable({
-                                    data,
-                                    columns
-                                }: MyTableProps) {
+
+export default function MyTable<TData>({
+                                           data,
+                                           columns
+                                       }: MyTableProps<TData>) {
 
     const table = useReactTable({
         data,
