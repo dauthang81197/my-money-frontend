@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  frontend:
+    image: dauthang811/my-money-frontend:latest
+    build:
+      context: .
+      dockerfile: ${ENV}
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=dev
+    restart: always
+    networks:
+      - app-net
+
+configs:
+  my-money-frontend-dev:
+    external: true
+
+networks:
+  app-net:
+    external: true
