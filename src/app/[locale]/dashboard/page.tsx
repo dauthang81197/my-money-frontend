@@ -320,11 +320,7 @@ export default function Dashboard() {
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
-                        if (transactionId && transactionId !== '') {
-                            handleSubmit();
-                        } else {
-                            handleUpdate();
-                        }
+                        handleSubmit();
 
                     }}
                     className="flex flex-col gap-4"
