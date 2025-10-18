@@ -500,3 +500,12 @@ summary svg {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
+
+button {
+    cursor: pointer;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}

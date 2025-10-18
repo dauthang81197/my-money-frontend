@@ -91,6 +91,25 @@ export interface Category {
     isArchived: boolean;
 }
 
+export interface CategoryTransaction {
+    categoryId: string
+    categoryName: string
+    totalAmount: string
+}
+
+export interface DashboardResponse {
+    summary: Summary
+}
+
+export interface Summary {
+    today: number
+    total: number
+    balance: number
+    todayChange: number
+    totalChange: number
+    balanceChange: number
+}
+
 
 export const TRANSACTION_URL = 'transaction'
 export const useGetTransaction = (dto: TransactionDto) => {
@@ -166,4 +185,26 @@ export const useGetTransactionHistory = (dto: QueryTransactionDto) => {
     });
 };
 
+export const useGetCategoriesForTransaction = (dto: TransactionDto) => {
+    return useQuery({
+        queryKey: [QUERY_KEY.GET_CATEGORIES, dto],
+        queryFn: () =>
+            api<CategoryTransaction[]>(`${TRANSACTION_URL}/categories`, {
+                method: 'GET',
+                params: {startDate: dto.startDate, endDate: dto.endDate},
+            }),
+        retry: false,
+    });
+};
 
+export const useGetDashboard = (dto: TransactionDto) => {
+    return useQuery({
+        queryKey: [QUERY_KEY.GET_DASHBOARD, dto],
+        queryFn: () =>
+            api<DashboardResponse>(`${TRANSACTION_URL}/dashboard`, {
+                method: 'GET',
+                params: {startDate: dto.startDate, endDate: dto.endDate},
+            }),
+        retry: false,
+    });
+};

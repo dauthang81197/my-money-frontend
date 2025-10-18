@@ -10,7 +10,8 @@ import ModalBase from '@/app/[locale]/components/modal/ModalBase';
 import {
     TransactionHistoryResponse,
     TransactionResponse,
-    useAddTransaction, useDeleteTransaction, useEditTransaction, useGetDetailTransaction,
+    useAddTransaction, useDeleteTransaction,
+    useGetCategoriesForTransaction, useGetDashboard, useGetDetailTransaction,
     useGetTransaction,
     useGetTransactionHistory
 } from '@/app/hooks/queries/useTransaction';
@@ -29,8 +30,9 @@ export default function Dashboard() {
     const [transactionId, setTransactionId] = useState('')
     // API
     const {data: myCategories} = useGetMyCategory()
+
     const {mutate: addTransaction} = useAddTransaction();
-    const {mutate: editTransaction} = useEditTransaction();
+    // const {mutate: editTransaction} = useEditTransaction();
     const {mutate: deleteTransaction} = useDeleteTransaction();
     const {data: detailTransaction} = useGetDetailTransaction(transactionId);
     const {data: transactionHistoriesData} = useGetTransactionHistory({})
@@ -40,7 +42,15 @@ export default function Dashboard() {
         startDate,
         endDate,
     });
+    const {data: myCategoriesForTransaction} = useGetCategoriesForTransaction({
+        startDate,
+        endDate,
+    })
 
+    const {data: myDashboard} = useGetDashboard({
+        startDate,
+        endDate,
+    })
     // State
 
     const [note, setNote] = useState('');
@@ -49,12 +59,7 @@ export default function Dashboard() {
     const [occurredAt, setOccurredAt] = useState(getDefaultOccurredAt());
 
     const [open, setOpen] = useState(false);
-    const metrics = [
-        {title: t('total'), value: '50.8K', change: '28.4%', isPositive: true},
-        {title: t('target'), value: '23.6K', change: '12.6%', isPositive: false},
-        {title: t('balance'), value: '756', change: '3.1%', isPositive: true},
-        {title: t('today'), value: '2.3K', change: '11.3%', isPositive: true},
-    ];
+
 
     useEffect(() => {
         if (open && transactionId) {
@@ -75,6 +80,46 @@ export default function Dashboard() {
         }
     }, [open]);
 
+    const getDashboard = useMemo(() => {
+        const metrics = [
+            {
+                title: t('total'),
+                value: myDashboard?.summary?.total ?? '0',
+                change: `${myDashboard?.summary?.totalChange ?? '0'}%`,
+                isPositive: true
+            },
+            {
+                title: t('target'),
+                value: 0,
+                change: '0%',
+                isPositive: false
+            },
+            {
+                title: t('balance'),
+                value: myDashboard?.summary?.balance ?? '0',
+                change: `${myDashboard?.summary?.balanceChange ?? '0'}%`,
+                isPositive: true
+            },
+            {
+                title: t('today'),
+                value: myDashboard?.summary?.today ?? '0',
+                change: `${myDashboard?.summary?.todayChange ?? '0'}%`,
+                isPositive: true
+            },
+        ];
+        return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {metrics.map((metric, index) => (
+                <MetricCard
+                    key={index}
+                    title={metric.title}
+                    value={String(metric.value)}
+                    change={String(metric.change)}
+                    isPositive={metric.isPositive}
+                />
+            ))}
+        </div>
+    }, [myDashboard?.summary?.balance, myDashboard?.summary?.balanceChange, myDashboard?.summary?.today, myDashboard?.summary?.todayChange, myDashboard?.summary?.total, myDashboard?.summary?.totalChange, t])
+
 
     const handleSubmit = useCallback(() => {
         addTransaction(
@@ -84,6 +129,8 @@ export default function Dashboard() {
                     console.log(data)
                     queryClient.invalidateQueries({queryKey: [QUERY_KEY.GET_TRANSACTION]});
                     queryClient.invalidateQueries({queryKey: [QUERY_KEY.GET_TRANSACTION_HISTORY]});
+                    queryClient.invalidateQueries({queryKey: [QUERY_KEY.GET_DASHBOARD]});
+                    queryClient.invalidateQueries({queryKey: [QUERY_KEY.GET_CATEGORIES]});
                     setOpen(false)
                 },
                 onError() {
@@ -93,21 +140,21 @@ export default function Dashboard() {
         )
     }, [addTransaction, amount, category, note, occurredAt, queryClient])
 
-    const handleUpdate = useCallback(() => {
-        editTransaction(
-            {categoryId: category, amount, occurredAt, note, id: transactionId},
-            {
-                onSuccess: () => {
-                    queryClient.invalidateQueries({queryKey: [QUERY_KEY.GET_TRANSACTION]});
-                    queryClient.invalidateQueries({queryKey: [QUERY_KEY.GET_TRANSACTION_HISTORY]});
-                    setOpen(false)
-                },
-                onError() {
-                    alert('Có lỗi xảy ra vui lòng thử lại!');
-                },
-            }
-        );
-    }, [amount, category, editTransaction, note, occurredAt, queryClient, transactionId])
+    // const handleUpdate = useCallback(() => {
+    //     editTransaction(
+    //         {categoryId: category, amount, occurredAt, note, id: transactionId},
+    //         {
+    //             onSuccess: () => {
+    //                 queryClient.invalidateQueries({queryKey: [QUERY_KEY.GET_TRANSACTION]});
+    //                 queryClient.invalidateQueries({queryKey: [QUERY_KEY.GET_TRANSACTION_HISTORY]});
+    //                 setOpen(false)
+    //             },
+    //             onError() {
+    //                 alert('Có lỗi xảy ra vui lòng thử lại!');
+    //             },
+    //         }
+    //     );
+    // }, [amount, category, editTransaction, note, occurredAt, queryClient, transactionId])
 
     const handleNavChange = (nav: string) => {
         console.log('Navigation changed to:', nav);
@@ -227,24 +274,7 @@ export default function Dashboard() {
 
 
     const getCard = useMemo(() => {
-        const data = [
-            {
-                title: 'A',
-                name: 'A',
-                icon: '/assets/img/house.png',
-                date: '18/06/2025',
-                price: '2,000,000',
-            },
-            {
-                title: 'B',
-                name: 'B',
-                icon: '/assets/img/house.png',
-                date: '19/06/2025',
-                price: '1,500,000',
-            },
-        ];
-
-        return data.map((item, index) => {
+        return myCategoriesForTransaction && myCategoriesForTransaction.map((item, index) => {
             return (
                 <div
                     key={index}
@@ -252,17 +282,16 @@ export default function Dashboard() {
                 >
                     <div className="bg-neutral-700 p-2 rounded-md">
                         {/* Ảnh icon */}
-                        <Image src={item.icon} alt="A" width={28} height={28} unoptimized/>
+                        <Image src={'/assets/img/house.png'} alt="A" width={28} height={28} unoptimized/>
                     </div>
                     <div>
-                        <h3 className="font-semibold">{item.title}</h3>
-                        <p className="text-sm text-neutral-400">{item.date}</p>
-                        <p className="text-blue-300 font-medium">{item.price} đ</p>
+                        <h3 className="font-semibold">{item.categoryName}</h3>
+                        <p className="text-blue-300 font-medium">{item.totalAmount.toLocaleString()} đ</p>
                     </div>
                 </div>
             );
         });
-    }, []);
+    }, [myCategoriesForTransaction]);
 
     return (
         <DashboardLayout
@@ -275,23 +304,13 @@ export default function Dashboard() {
             onCreateReport={handleCreateReport}
         >
             {/* Metrics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                {metrics.map((metric, index) => (
-                    <MetricCard
-                        key={index}
-                        title={metric.title}
-                        value={metric.value}
-                        change={metric.change}
-                        isPositive={metric.isPositive}
-                    />
-                ))}
-            </div>
+            {getDashboard}
             <div className="flex justify-between gap-1">
                 <div className="text-white w-[60%] border px-4 py-2">
                     <div className="px-2 pt-2 pb-4 flex justify-between items-center">
                         <p>Danh sách mục chi tiêu tháng</p>
                         <button
-                            className="bg-blue-600 text-white px-4 py-2 rounded"
+                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-500 transition-colors duration-200"
                             onClick={() => setOpen(true)}
                         >
                             Chi tiêu
