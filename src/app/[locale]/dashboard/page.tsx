@@ -22,8 +22,11 @@ import {useQueryClient} from "@tanstack/react-query";
 import MyTable from "@/app/[locale]/components/Table";
 import {ColumnDef} from "@tanstack/react-table";
 import {Eye, Pencil, Trash2} from "lucide-react";
+import {useMobile} from "@/app/hooks/useMoble";
+import DashboardMobile from "@/app/[locale]/dashboard/DardboardMoble";
 
 export default function Dashboard() {
+    const isMobile = useMobile();
     const t = useTranslations();
     const {startDate: defaultStart, endDate: defaultEnd} = getCurrentMonthRange();
     const queryClient = useQueryClient();
@@ -292,135 +295,135 @@ export default function Dashboard() {
             );
         });
     }, [myCategoriesForTransaction]);
-
     return (
-        <DashboardLayout
-            activeNav="Reports"
-            title="Welcome back, John"
-            subtitle="Measure your advertising ROI and report website traffic."
-            userName="John"
-            onNavChange={handleNavChange}
-            onExport={handleExport}
-            onCreateReport={handleCreateReport}
-        >
-            {/* Metrics Cards */}
-            {getDashboard}
-            <div className="flex justify-between gap-1">
-                <div className="text-white w-[60%] border px-4 py-2">
-                    <div className="px-2 pt-2 pb-4 flex justify-between items-center">
-                        <p>Danh sách mục chi tiêu tháng</p>
-                        <button
-                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-500 transition-colors duration-200"
-                            onClick={() => setOpen(true)}
-                        >
-                            Chi tiêu
-                        </button>
+        isMobile ? <DashboardMobile/> :
+            <DashboardLayout
+                activeNav="Reports"
+                title="Welcome back, John"
+                subtitle="Measure your advertising ROI and report website traffic."
+                userName="John"
+                onNavChange={handleNavChange}
+                onExport={handleExport}
+                onCreateReport={handleCreateReport}
+            >
+                {/* Metrics Cards */}
+                {getDashboard}
+                <div className="flex justify-between gap-1">
+                    <div className="text-white w-[60%] border px-4 py-2">
+                        <div className="px-2 pt-2 pb-4 flex justify-between items-center">
+                            <p>Danh sách mục chi tiêu tháng</p>
+                            <button
+                                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-500 transition-colors duration-200"
+                                onClick={() => setOpen(true)}
+                            >
+                                Chi tiêu
+                            </button>
+                        </div>
+                        {getCard}
                     </div>
-                    {getCard}
+                    <div className="min-w-[500px]">
+                        <ExpenseCalendar expenses={getDataCalendar}/>
+                    </div>
                 </div>
-                <div className="min-w-[500px]">
-                    <ExpenseCalendar expenses={getDataCalendar}/>
+
+                <div>
+                    <p>History</p>
+                    {(transactionHistoriesData?.data?.length ?? 0) > 0 && (
+                        <MyTable data={transactionHistoriesData ? transactionHistoriesData.data! : []} columns={columns}
+                                 totalPages={transactionHistoriesData?.totalPage || 0}/>
+                    )}
                 </div>
-            </div>
+                <ModalBase open={open} onClose={() => setOpen(false)}>
+                    <h2 className="text-white text-lg font-semibold mb-4">
+                        Thêm mục chi tiêu
+                    </h2>
 
-            <div>
-                <p>History</p>
-                {(transactionHistoriesData?.data?.length ?? 0) > 0 && (
-                    <MyTable data={transactionHistoriesData ? transactionHistoriesData.data! : []} columns={columns}
-                             totalPages={transactionHistoriesData?.totalPage || 0}/>
-                )}
-            </div>
-            <ModalBase open={open} onClose={() => setOpen(false)}>
-                <h2 className="text-white text-lg font-semibold mb-4">
-                    Thêm mục chi tiêu
-                </h2>
+                    {/* FORM */}
+                    <form
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            handleSubmit();
 
-                {/* FORM */}
-                <form
-                    onSubmit={(e) => {
-                        e.preventDefault();
-                        handleSubmit();
+                        }}
+                        className="flex flex-col gap-4"
+                    >
+                        {/* Ô nhập tên */}
+                        <div className="flex flex-col">
+                            <label className="text-gray-300 mb-1 text-sm">Tên chi tiêu</label>
+                            <input
+                                type="text"
+                                value={note}
+                                onChange={(e) => setNote(e.target.value)}
+                                placeholder="Ví dụ: Mua cà phê"
+                                className="rounded-md px-3 py-2 bg-neutral-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required
+                            />
+                        </div>
 
-                    }}
-                    className="flex flex-col gap-4"
-                >
-                    {/* Ô nhập tên */}
-                    <div className="flex flex-col">
-                        <label className="text-gray-300 mb-1 text-sm">Tên chi tiêu</label>
-                        <input
-                            type="text"
-                            value={note}
-                            onChange={(e) => setNote(e.target.value)}
-                            placeholder="Ví dụ: Mua cà phê"
-                            className="rounded-md px-3 py-2 bg-neutral-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                        />
-                    </div>
+                        {/* Ô chọn danh mục */}
+                        <div className="flex flex-col">
+                            <label className="text-gray-300 mb-1 text-sm">Danh mục</label>
+                            <select
+                                value={category}
+                                onChange={(e) => setCategory(e.target.value)}
+                                className="rounded-md px-3 py-2 bg-neutral-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required
+                            >
+                                {myCategories?.map((item) => (
+                                    <option key={item.id} value={item.id}>
+                                        {item.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
 
-                    {/* Ô chọn danh mục */}
-                    <div className="flex flex-col">
-                        <label className="text-gray-300 mb-1 text-sm">Danh mục</label>
-                        <select
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                            className="rounded-md px-3 py-2 bg-neutral-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                        >
-                            {myCategories?.map((item) => (
-                                <option key={item.id} value={item.id}>
-                                    {item.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                        {/* Ô nhập số tiền */}
+                        <div className="flex flex-col">
+                            <label className="text-gray-300 mb-1 text-sm">Số tiền</label>
+                            <input
+                                type="number"
+                                value={amount}
+                                min={1000}
+                                onChange={(e) => setAmount(Number(e.target.value))}
+                                placeholder="200000"
+                                className="rounded-md px-3 py-2 bg-neutral-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required
+                            />
+                        </div>
 
-                    {/* Ô nhập số tiền */}
-                    <div className="flex flex-col">
-                        <label className="text-gray-300 mb-1 text-sm">Số tiền</label>
-                        <input
-                            type="number"
-                            value={amount}
-                            min={1000}
-                            onChange={(e) => setAmount(Number(e.target.value))}
-                            placeholder="200000"
-                            className="rounded-md px-3 py-2 bg-neutral-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                        />
-                    </div>
+                        <div className="flex flex-col">
+                            <label className="text-gray-300 mb-1 text-sm">Ngày chi tiêu</label>
+                            <input
+                                type="datetime-local"
+                                value={occurredAt ? occurredAt.slice(0, 16) : ''}
+                                onChange={(e) => {
+                                    const local = e.target.value;
+                                    const fullDateTime = `${local}:00+07:00`;
+                                    setOccurredAt(fullDateTime);
+                                }}
+                                className="rounded-md px-3 py-2 bg-neutral-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required
+                            />
+                        </div>
 
-                    <div className="flex flex-col">
-                        <label className="text-gray-300 mb-1 text-sm">Ngày chi tiêu</label>
-                        <input
-                            type="datetime-local"
-                            value={occurredAt ? occurredAt.slice(0, 16) : ''}
-                            onChange={(e) => {
-                                const local = e.target.value;
-                                const fullDateTime = `${local}:00+07:00`;
-                                setOccurredAt(fullDateTime);
-                            }}
-                            className="rounded-md px-3 py-2 bg-neutral-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                        />
-                    </div>
-
-                    {/* Nút hành động */}
-                    <div className="flex justify-end gap-3 mt-4">
-                        <button
-                            type="button"
-                            onClick={() => setOpen(false)}
-                            className="px-4 py-2 rounded-md bg-neutral-600 text-white hover:bg-neutral-500"
-                        >
-                            Hủy
-                        </button>
-                        <button
-                            type="submit"
-                            className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-500"
-                        >
-                            Lưu
-                        </button>
-                    </div>
-                </form>
-            </ModalBase>
-        </DashboardLayout>
+                        {/* Nút hành động */}
+                        <div className="flex justify-end gap-3 mt-4">
+                            <button
+                                type="button"
+                                onClick={() => setOpen(false)}
+                                className="px-4 py-2 rounded-md bg-neutral-600 text-white hover:bg-neutral-500"
+                            >
+                                Hủy
+                            </button>
+                            <button
+                                type="submit"
+                                className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-500"
+                            >
+                                Lưu
+                            </button>
+                        </div>
+                    </form>
+                </ModalBase>
+            </DashboardLayout>
     );
 }

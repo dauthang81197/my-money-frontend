@@ -24,3 +24,12 @@ export const getCurrentMonthRange = () => {
         endDate: toDateStr(end),
     };
 };
+
+export const formatDate = (d: Date) =>
+    d.toLocaleDateString("vi-VN", {
+        weekday: "short",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+    });
+
