@@ -23,6 +23,7 @@ export interface TransactionResponse {
 
 export interface QueryTransactionDto {
     searchKey?: string;
+    date?: string;
 }
 
 export interface TransactionHistoryResponse {
@@ -174,17 +175,25 @@ export const useDeleteTransaction = () => {
 
 
 export const useGetTransactionHistory = (dto: QueryTransactionDto) => {
-    return useQuery({
+    const query = useQuery({
         queryKey: [QUERY_KEY.GET_TRANSACTION_HISTORY, dto],
         queryFn: () =>
-            api<PaginationCommon<TransactionHistoryResponse>>(`${TRANSACTION_URL}/histories`, {
-                method: 'GET',
-                params: {startDate: dto.searchKey},
-            }),
+            api<PaginationCommon<TransactionHistoryResponse>>(
+                `${TRANSACTION_URL}/histories`,
+                {
+                    method: "GET",
+                    params: {date: dto?.date},
+                }
+            ),
         retry: false,
     });
-};
 
+    return {
+        ...query,
+        isLoading: query.isLoading,
+        isFetching: query.isFetching, // nếu cần loading khi refetch
+    };
+};
 export const useGetCategoriesForTransaction = (dto: TransactionDto) => {
     return useQuery({
         queryKey: [QUERY_KEY.GET_CATEGORIES, dto],
